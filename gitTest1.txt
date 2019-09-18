@@ -1,0 +1,118 @@
+集中式：SVN
+优点：代码存在单一服务器上，便于管理
+缺点：单点故障
+
+1，初始化
+	git config --global user.name "myname"
+	git config --global user.email myemail@qq.com
+	--global表示全局性操作，--system表示只针对当前系统，不写表示针对当前项目(当前文件夹)
+	设置完之后查看
+	git config --list
+
+2，基本概念：
+	1，区域：
+		1，工作区：本地代码(沙箱环境)
+			|
+			|  提交
+			V
+		2，暂存区：
+			|
+			|  提交
+			V
+		3，版本库：
+
+
+	2，对象：
+		1，Git对象：单个文件的一次提交
+		2，树对象：项目的一次提交
+		3，提交对象：项目的一个版本，对树对象的封装，提供了注释等，并且按顺序将提交对象串联起来
+
+	3，git存的不是增量，是每次提交的快照
+
+3，windows上git可用的linux基本命令：
+	clear：清屏
+	echo “info”控制台输出
+	ll：子目录平铺在控制台
+	find 目录名
+	find 目录名 -type f:只找文件
+	rm 文件名
+	mv 源文件 重命名文件(可以带路径)
+	cat 文件url
+	cim
+
+4，git基本命令：
+	1，git init：在目录下使用，就会将当前目录创建为仓库
+
+5，git目录：
+	hooks：包含客户端或服务端的钩子脚本(回调函数)，提交前后过程中都可以添加操作
+	info：包含一个全局性排除文件，即不需要git维护的数据
+	logs：保存日志
+	objects：目录存储所有数据内容(重要)
+	refs目录存储只想数据(分支)的提交对象指针(重要)
+	config：文件包含项目特有的配置选项
+	description：仓库的描述信息
+	HEAD：文件指示目前被捡出的分支(重要)
+	index：文件曹村暂存区信息(重要)
+
+6，git对象：
+	git核心是一个键值对数据库，可以根据键入内容获取值
+	
+	1，键值对测试：
+		1，echo 'test' | git hash-object -w --stdin
+		:含义，hash-object：命令存储数据对象'test'，若不加w则只返回值，不存储，后面的--stdin表示内容的输入为标准输入流(前面的'test')，如果接文件路径就会将对应文件做hash
+		2，git cat-file -p hashvalue 就能看到hashvalue对应的值'test', -p表示显示内容 -t表示返回内容的类型(blob)
+	2，git对象只能存文件的内容，甚至没有文件名，只能通过hash获取，因此并不代表项目的版本，项目的一个版本可能包含很对个对象的修改
+	3，git对象的问题：
+		1，通过hash值取文件内容不方便
+		2，文件名没有被保存
+
+
+
+7，树对象：
+	1，解决文件名保存的内容，允许多个文件组织到一起，一个树对象包含了一条或多条记录，也可以包含树对象
+	2，如何生成树对象：
+		1，首先更新git对象：git update-info --add --cacheinfo 文件格式 hash值 文件名
+		eg：git update-index --add --cacheinfo 100644 560a3d89bf36ea10794402f6664740c284d4ae3bte test.txt
+		如果不是第一此添加不用加--add
+
+		2，git write-tree完成树的创建
+
+		3，将两个树合并到一起：
+		git read-tree --prefix=bak hash
+		eg: git read-tree --prefix=bak 06e21bb0105e2de6c846725a9a7172f57dd1af96
+		读取第一棵树到暂存区
+
+		然后git write-tree
+
+	3，查看暂存区内容
+	git ls-files -s
+
+
+8，提交对象：
+	1，通过commit-tree命令创建一个提交对象，需要提供hash值和父对象(第一次不用)
+	git commit-tree hash
+	eg: echo "first commit" | git commit-tree 9f52602d4bbf79505f33886f7a879b5497f87693
+	echo内容相当于添加注释
+	第二个提交对象：
+	git commit-tree 这次提交树的hash -p 父树的hash
+
+9，git add操作的流程：先在版本库中生成git对象，然后再将其拿到暂存区。并不是工作目录直接到暂存区。
+	在提交的时候，再参照暂存区生成树对象，然后放到版本库，然后从版本库将树对象取出添加注释信息生成提交对象，然后放入版本库中，因此一次提交只能有一个树对象，提交对象。
+
+10，git操作最基本流程：
+	1，创建工作目录，进行操作
+		git init
+	2，执行git add./
+		1，git hash-object -w 文件名：修改了多少工作目录中的文件，此命令就被执行多少次
+		2，git update-index ...：
+	3，执行git commit -m “注释内容”
+		git write-tree
+		git commit-tree
+	
+
+
+
+
+
+
+
