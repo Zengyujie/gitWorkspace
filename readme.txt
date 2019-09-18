@@ -4,4 +4,4 @@ Git has a mutable index called stage
 Git tracks changes of files list
 silly boss
 creating a new branch is quick & simple
-new line
+new line end
