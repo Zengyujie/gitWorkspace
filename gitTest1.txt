@@ -174,6 +174,10 @@
 	1，git checkout 分支 要指向的提交对象
 	2，git checkout -b 分支名：创建分支并且切换过去
 
+	在新版git中，为了避免checkout --file的语义区别，新增了切换命令
+	git switch -c 分支名：创建并切换到该分支
+	git swtich 分支名：切换分支
+
 
 21，删除分支
 	git branch -d 分支名字：删除已经被合并的分支
@@ -222,7 +226,7 @@
 28，分支合并
 	1，git merge 要合并的分支：要合并的分支和当前分支合并
 
-	2，如果修改的分支是在主分支基础上修改的，则合并成为快进(fast-forward)合并
+	2，如果修改的分支是在主分支基础上修改的，则合并成为快进(fast-forward)合并，可以使用参数--no-ff禁止快进合并
 
 	快进合并不会产生冲突
 
@@ -241,12 +245,118 @@
 	git stash pop： 应用储藏，并在栈中删除
 	git stash drop stash名字：删除名字的存藏
 
+	在主分支上修改后，如果仅仅想同步修改，不想全部merge，可以使用
+	git cherry-pick 主分支提交的hash值
+	将修改复制到当前分支(本质上还是重新提交了一次)
 
 //////////////后悔药//////////////
 
 30，三种情况：
 	1，工作区：如何撤回自己在工作目录中的修改
+		git restore 文件名
 	2，暂存区：如何撤回自己的暂存
-	3，版本库：如何撤回自己的提交
+		git restore --staged 文件名
+	3，版本库：如何撤回提交
+		1，git commit --amend
+			只是重新给用户一次机会该注释的机会
+	    2，git restore -s HEAD~1 目标文件
+	    	将目标文件回退到上一个版本
+	   	4，git restore -s 版本hash值
+	   		将目标文件退回到指定版本
+	    
 
-31
+31，git reflog获取所有head移动的信息，只要head移动过就会纪录
+
+
+32，reset
+	1，git reset --soft HEAD~/hash值 撤销上一次提交的版本
+	在运行git commit时，git会创建一个新的提交，并移动HEAD所指向的分支来使其指向该提交，使用git reset --soft使其回到版本时只是把分支移动到原来的位置，而不会改变索引和工作目录，也就是现在的工作区不变。再次commit时，会新开一个分支，然后分支和head一起移动到新的分支，旧的分叉会丢弃
+
+	相当于回到了上一次的commit之前
+
+	reset vs checkout：
+	reset移动会HEAD和分支一起动，checkout只动HEAD不动分支
+
+	如果要移动回来，可以先使用git reflog查看head移动的记录，然后使用soft移动到目标位置
+
+	2，git reset [--mixed](默认值,可省略) HEAD~/hash值
+	撤销提交和暂存区，相当于回到了上一次的add之前
+
+
+	3，git reset --HARD HEAD~/hash值
+	不仅回到了add前，还重置了工作区，和分支checkout类似，没被跟踪的文件也会被带过去，
+
+	4，checkout和reset --hard的区别
+		1，checkout只动head，后者动head和分支
+		2，checkout对工作目录是安全的，如果当前工作区有更改，则不能切换成功，后者是强行切换，就会导致工作区内容丢失
+
+	5，git reset [--mixed] [HEAD] filename：相当于将上一个提交中的filename文件覆盖当前暂存区的文件，不会影响其他文件。只有mixed可以操作路径，soft，hard不可以	
+
+
+	6，git checkout 文件名
+		只会动工作目录，用head里面的东西去覆盖动作目录
+
+
+33，数据恢复
+	1，通过git reflog查找想要的分支，然后硬重置回去
+		git log -g可以输出更多信息
+	2，在想要硬重置回去的地方开一个分支
+		git branch 分支名 hash值
+
+
+34，打tag
+	git tag： 列出所有版本
+	git tag -l 版本名：列出版本名后面的版本
+	git tag 标签名：打tag
+	git show 标签名：查看标签
+	git tag -d 标签名：删除标签
+
+35，检出标签：
+	git checkout -b 标签名：创建一个新的分支指向原标签
+	如果不加-b会导致头部和内容分离，只能获取标签，标签对应的内容不能获取
+
+
+
+///////////////////远程仓库////////////////////
+
+36，添加远程仓库：
+	git remote add 后面网址的别名 https://github.com/Zengyujie/javase_code.git
+
+37，git remote -v：查看仓库
+
+38，git push 远程仓库别名 本地要推送的分支
+
+39，克隆仓库：git clone url(克隆仓库不需要url)
+
+40，一次团队协作：
+	1，初始化一个空的仓库，github上创建
+	2，项目经理创建本地仓库
+		1，git init
+		2，将源码复制进来
+		3，修改用户名和邮箱
+		4，git add
+		5，git commit
+		6，git remote 别名 仓库url
+		7，清理本地凭据
+		8，git push 别名 分支 (输入用户名密码，推送完生成远程分支)
+		9，项目经理邀请成员
+		10，成员克隆远程分支
+		git clone 仓库url （在本地生成.git文件，默认为远程仓库配了别名origin）
+		11，成员修改
+			git checkout -b dev(本地新建分支) origin/dev(远程跟踪分支)
+			git branch origin/dev dev(建立dev分支与远程dev分支的连接，不然无法同步)
+			
+			执行自己的操作git add，commit...
+			
+			在push之前，以防其他人修改了导致上传冲突，首先git pull拉取最新内容，解决冲突后，commit，再push
+
+
+
+41，远程跟踪分支，远程分支，本地分支
+	
+	在push的时候就会生成远程跟踪分支(origin/master)
+
+	只有在克隆的适合本地分支和远程跟踪分支有同步关系的
+
+
+	git push 和 git fetch都是用于远程跟踪分支和远程分支的同步，并且只有当本地分支已经和远程分支建立连接之后，在本地分支使用push才会同步远程跟踪分支和远程分支。而fetch无论如何都需要merge的
