@@ -8,7 +8,7 @@
 </head>
 <body>
 
-<!-- 
+<%-- 
 jsp的本质是servlet
 
 当第一次访问jsp页面的时候，tomcat会把jsp页面翻译成一个java源文件
@@ -79,9 +79,34 @@ response.getWriter 和jsp中out的区别：
 2，会执行response的刷新操作，把所有数据传给客户端。
 由于jsp翻译后都是用out输出，所以一般情况下，jsp中统一使用out输出，避免打乱
 输出顺序
+out.write()输出字符串没有问题(整性可能的问题是，底层将int强转为字符串了)
+out.print()输出任何数据都没有问题，因为都是将他们转为字符串再write
+因此在jsp页面中，一般使用out.print()
 
+
+JSP常用标签：
+
+(网页分割，改一个该所有)
+1，静态包含(最常用，因为jsp逐渐只负责输出数据了，不会有很多复杂的调用)
+	<%@ include file="/test/foot.jsp"%>:file属性就是静态包含
+	地址中第一个/表示工程路径的目录
+	1，静态包含不会翻译包含jsp成servlet
+	2，静态包含其实就是把包含的jsp页面代码拷贝到包含位置输出
+2，动态包含
+	<jsp:include page="/test/foot.jsp"></jsp:include>
+	1，动态包含会把包含的jsp页面翻译成java代码
+	2，动态包含底层代码使用代码调用被包含的jsp输出，底层是主jsp把自己的request，response，out都
+	传递给被包含的jsp去使用了
+	3，动态包含还可以传递参数
+	<jsp:include page="/test/foot.jsp">
+		<jsp:param name="username" value="zhangsan"/>
+	</jsp:include>
+3，请求转发
+	<jsp:forward page="转发路径">
+		<!--可带参数，同上 -->
+	</jsp:forward>
 	
- -->
+ --%>
 
 <%@ page import="java.util.*" %>
 
